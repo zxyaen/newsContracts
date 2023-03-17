@@ -22,10 +22,23 @@ contract userContract {
         uint index;
     }
 
+    //定义文章数据结构
+    struct newsStruct {
+        string ipfsHash;
+        string username;
+        address userAddress;
+        uint time;
+        uint index;
+    }
+    string[] public newsHashList; //所有文章IPFS哈希地址集合
+
     address[] public userAddresses; //所有地址集合
     // userAddresses.push(0x0987654321098765432109876543210987654321);
     string[] private usernames; //所有用户名集合
 
+    // newsStruct[] public NewsList; // 所有文章数据集合
+
+    mapping(address => newsStruct) public NewsStruct;
     /**
      *  userStruct:{
             0x1234567890123456789012345678901234567890: {
@@ -61,6 +74,23 @@ contract userContract {
         return (userAddresses[userStruct[_userAddress].index] == _userAddress);
     }
 
+    function isNewsHashExist(
+        string memory _newsHash
+    ) public view returns (bool) {
+        for (uint i = 0; i < newsHashList.length; i++) {
+            if (
+                keccak256(bytes(newsHashList[i])) == keccak256(bytes(_newsHash))
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // function isExitNewsHash(string memory _newsHash)public view returns(bool isIndeed){
+    //     if(newsHashList.length == 0) return true;
+    //     return (newsHashList[_newsHash].index == _newsHash);
+    // }
     //判断用户名是否存在
     function isExitUsername(
         string memory _username
@@ -141,5 +171,40 @@ contract userContract {
             userStruct[_userAddress].time,
             userStruct[_userAddress].index
         );
+    }
+
+    // 新文章创建事件
+    event NewNewsCreated(
+        string _ipfsHash,
+        string _username,
+        address _userAddress,
+        uint _time,
+        uint _index
+    );
+
+    //文章信息上链
+    function createNews(
+        string memory _ipfsHash,
+        string memory _username,
+        address _userAddress
+    ) public returns (uint index) {
+        require(isExitUserAddress(_userAddress));
+        require(!isNewsHashExist(_ipfsHash));
+        newsHashList.push(_ipfsHash);
+        NewsStruct[_userAddress] = newsStruct(
+            _ipfsHash,
+            _username,
+            _userAddress,
+            block.timestamp,
+            newsHashList.length - 1
+        );
+        emit NewNewsCreated(
+            _ipfsHash,
+            _username,
+            _userAddress,
+            block.timestamp,
+            userAddresses.length - 1
+        );
+        return newsHashList.length - 1;
     }
 }
