@@ -203,7 +203,7 @@ contract userContract {
             _username,
             _userAddress,
             block.timestamp,
-            userAddresses.length - 1
+            newsHashList.length - 1
         );
         return newsHashList.length - 1;
     }
